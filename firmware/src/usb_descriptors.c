@@ -1,0 +1,124 @@
+// Descripteurs de la manette HORI Pokken repris de GP2040-CE (MIT) : github.com/OpenStickCommunity/GP2040-CE
+
+#include <string.h>
+#include "tusb.h"
+#include "protocol.h"
+
+static const uint8_t device_descriptor[] = {
+    0x12,
+    0x01,
+    0x00, 0x02,
+    0x00,
+    0x00,
+    0x00,
+    0x40,
+    0x0D, 0x0F,
+    0x92, 0x00,
+    0x00, 0x01,
+    0x01,
+    0x02,
+    0x00,
+    0x01,
+};
+
+static const uint8_t hid_report_descriptor[] = {
+    0x05, 0x01,
+    0x09, 0x05,
+    0xA1, 0x01,
+    0x15, 0x00,
+    0x25, 0x01,
+    0x35, 0x00,
+    0x45, 0x01,
+    0x75, 0x01,
+    0x95, 0x10,
+    0x05, 0x09,
+    0x19, 0x01,
+    0x29, 0x10,
+    0x81, 0x02,
+    0x05, 0x01,
+    0x25, 0x07,
+    0x46, 0x3B, 0x01,
+    0x75, 0x04,
+    0x95, 0x01,
+    0x65, 0x14,
+    0x09, 0x39,
+    0x81, 0x42,
+    0x65, 0x00,
+    0x95, 0x01,
+    0x81, 0x01,
+    0x26, 0xFF, 0x00,
+    0x46, 0xFF, 0x00,
+    0x09, 0x30,
+    0x09, 0x31,
+    0x09, 0x32,
+    0x09, 0x35,
+    0x75, 0x08,
+    0x95, 0x04,
+    0x81, 0x02,
+    0x06, 0x00, 0xFF,
+    0x09, 0x20,
+    0x95, 0x01,
+    0x81, 0x02,
+    0x0A, 0x21, 0x26,
+    0x95, 0x08,
+    0x91, 0x02,
+    0xC0,
+};
+
+static const uint8_t configuration_descriptor[] = {
+    0x09, 0x02, 0x29, 0x00, 0x01, 0x01, 0x00, 0x80, 0xFA,
+    0x09, 0x04, 0x00, 0x00, 0x02, 0x03, 0x00, 0x00, 0x00,
+    0x09, 0x21, 0x11, 0x01, 0x00, 0x01, 0x22,
+    sizeof(hid_report_descriptor), 0x00,
+    0x07, 0x05, 0x02, 0x03, 0x40, 0x00, 0x01,
+    0x07, 0x05, 0x81, 0x03, 0x40, 0x00, 0x01,
+};
+
+static const char *const strings[] = {
+    NULL,
+    "HORI CO.,LTD.",
+    "POKKEN CONTROLLER",
+};
+
+const uint8_t *tud_descriptor_device_cb(void) {
+    return device_descriptor;
+}
+
+const uint8_t *tud_descriptor_configuration_cb(uint8_t index) {
+    return configuration_descriptor;
+}
+
+const uint8_t *tud_hid_descriptor_report_cb(uint8_t instance) {
+    return hid_report_descriptor;
+}
+
+const uint16_t *tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
+    static uint16_t desc[32 + 1];
+    size_t count;
+    if (index == 0) {
+        desc[1] = 0x0409;
+        count = 1;
+    } else {
+        if (index >= sizeof(strings) / sizeof(strings[0])) return NULL;
+        const char *str = strings[index];
+        count = strlen(str);
+        if (count > 32) count = 32;
+        for (size_t i = 0; i < count; i++) desc[1 + i] = (uint8_t)str[i];
+    }
+    desc[0] = (uint16_t)((TUSB_DESC_STRING << 8) | (2 * count + 2));
+    return desc;
+}
+
+uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type,
+                               uint8_t *buffer, uint16_t reqlen) {
+    return 0;
+}
+
+void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type,
+                           const uint8_t *buffer, uint16_t bufsize) {
+    if (bufsize == 9 && buffer[0] == 0) {
+        buffer++;
+        bufsize--;
+    }
+    if (bufsize >= 8) protocol_on_message(buffer);
+}
