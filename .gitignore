@@ -1,0 +1,15 @@
+node_modules/
+web/dist/
+web/public/models/basic-pitch/
+web/public/models/demucs/
+firmware/build/
+release/
+*.log
+firmware-esp32/.pio/
+firmware-esp32/build*.log
+musiques-test/
+web/test-audio/
+
+notes/
+web/src/dev/
+.vscode/
