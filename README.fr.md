@@ -42,9 +42,10 @@ savent pas parler aux appareils USB depuis une page web.
 
 ## Installation
 
-1. Télécharge le projet (*Code › Download ZIP*) et décompresse-le.
-2. Lance la page : double-clique sur `Start AutoOcarina.bat` sous Windows, ou lance `./start.sh` sous macOS / Linux
-   (Python 3 requis). Elle s’ouvre dans ton navigateur. Garde la fenêtre de console ouverte pendant l’utilisation.
+1. Télécharge `AutoOcarina-<version>.zip` dans la [dernière version](../../releases/latest) (rubrique *Assets*) et
+   décompresse-le.
+2. Lance la page : double-clique sur `Start AutoOcarina.bat` sous Windows, ou lance `bash start.sh` sous macOS /
+   Linux (Python 3 requis). Elle s’ouvre dans ton navigateur. Garde la fenêtre de console ouverte pendant l’utilisation.
 3. Installe le firmware sur ta carte, une seule fois.
 
 **ESP32**

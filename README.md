@@ -41,8 +41,9 @@ devices from a web page.
 
 ## Setup
 
-1. Download the project (*Code › Download ZIP*) and unzip it.
-2. Start the page: double-click `Start AutoOcarina.bat` on Windows, or run `./start.sh` on macOS / Linux (needs
+1. Download `AutoOcarina-<version>.zip` from the [latest release](../../releases/latest) (under *Assets*) and
+   unzip it.
+2. Start the page: double-click `Start AutoOcarina.bat` on Windows, or run `bash start.sh` on macOS / Linux (needs
    Python 3). It opens in your browser. Keep the console window open while you use it.
 3. Install the firmware on your board, once.
 
