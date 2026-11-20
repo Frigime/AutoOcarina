@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AutoOcarina</title>
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <script type="module" crossorigin src="./assets/index-Tphho9eH.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/rolldown-runtime-BCiCTKAo.js">
+    <link rel="stylesheet" crossorigin href="./assets/index-Bkx6ZnFz.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <picture class="logo">
+          <source srcset="logo-dark.png" media="(prefers-color-scheme: dark)" />
+          <img src="logo-light.png" alt="" width="48" height="48" />
+        </picture>
+        <div>
+          <h1><span class="brand-auto">Auto</span>Ocarina</h1>
+          <p class="muted tagline" data-i18n="app.tagline">Dépose une musique, la carte la joue à l’ocarina.</p>
+        </div>
+      </div>
+      <div class="device">
+        <button id="lang" class="btn ghost lang-btn" data-i18n="lang.switch" data-i18n-title="lang.switchTitle">English</button>
+        <span id="device-status" class="pill">Carte non connectée</span>
+        <button id="connect" class="btn primary" data-i18n="connect">Connecter la carte</button>
+      </div>
+    </header>
+
+    <div id="connect-dialog" class="tap-overlay" hidden>
+      <div class="tap-box" role="dialog" aria-modal="true" aria-labelledby="connect-title">
+        <h2 id="connect-title" data-i18n="dlg.title">Quelle carte veux-tu connecter ?</h2>
+        <button class="choice" data-kind="bluetooth">
+          <b data-i18n="dlg.esp.title">ESP32 (Bluetooth)</b>
+          <span class="muted small" data-i18n="dlg.esp.desc"></span>
+        </button>
+        <button class="choice" data-kind="usb">
+          <b data-i18n="dlg.rp.title">Raspberry Pi Pico, RP2040 ou RP2350 (câble)</b>
+          <span class="muted small" data-i18n="dlg.rp.desc"></span>
+        </button>
+        <button class="btn" data-kind="cancel" data-i18n="cancel">Annuler</button>
+      </div>
+    </div>
+
+    <div id="pad-dialog" class="tap-overlay" hidden>
+      <div class="tap-box pad-box" role="dialog" aria-modal="true" aria-labelledby="pad-title">
+        <div class="row pad-head">
+          <h2 id="pad-title" data-i18n="pad.title">Manette</h2>
+          <span id="pad-status" class="small"></span>
+          <button id="pad-close" class="btn" data-i18n="pad.close">Fermer (Échap)</button>
+        </div>
+        <div class="vpad">
+          <div class="vpad-shoulders">
+            <div><button data-b="64">ZL</button><button data-b="16">L</button></div>
+            <div class="vpad-sys">
+              <button data-b="256" title="−">−</button>
+              <button data-b="8192" title="Capture">◉</button>
+              <button data-b="4096" title="Home">⌂</button>
+              <button data-b="512" title="+">+</button>
+            </div>
+            <div><button data-b="32">R</button><button data-b="128">ZR</button></div>
+          </div>
+          <div class="vpad-body">
+            <div class="vpad-left">
+              <div class="vstick" data-stick="left"><div class="vstick-knob"></div></div>
+              <button class="vpad-small" data-b="1024">L3</button>
+              <div class="vdpad">
+                <button data-hat="up" class="up">▲</button>
+                <button data-hat="left" class="left">◀</button>
+                <button data-hat="right" class="right">▶</button>
+                <button data-hat="down" class="down">▼</button>
+              </div>
+            </div>
+            <div class="vpad-right">
+              <div class="vabxy">
+                <button data-b="8" class="x">X</button>
+                <button data-b="1" class="y">Y</button>
+                <button data-b="4" class="a">A</button>
+                <button data-b="2" class="b">B</button>
+              </div>
+              <div class="vstick" data-stick="right"><div class="vstick-knob"></div></div>
+              <button class="vpad-small" data-b="2048">R3</button>
+            </div>
+          </div>
+        </div>
+        <p class="small muted" data-i18n-html="pad.help"></p>
+        <p id="pad-keys" class="small muted pad-keys-help"></p>
+        <p id="pad-gamepad" class="small muted"></p>
+      </div>
+    </div>
+
+    <div id="browser-warning" class="banner" hidden data-i18n-html="browser.warning"></div>
+
+    <main class="layout">
+      <aside class="sidebar card">
+        <h2 data-i18n="songs.title">Mes morceaux</h2>
+        <p class="muted small" data-i18n-html="songs.bootHint"></p>
+        <ol id="song-list" class="song-list"></ol>
+        <button id="add-song" class="btn ghost wide" data-i18n="songs.add">+ Nouveau morceau</button>
+
+        <div class="capacity">
+          <div class="capacity-bar"><div id="capacity-fill"></div></div>
+          <span id="capacity-text" class="muted small"></span>
+        </div>
+
+        <button id="send" class="btn primary wide big">Envoyer à la carte</button>
+        <p id="send-status" class="small muted" aria-live="polite"></p>
+
+        <div id="remote" class="remote" hidden>
+          <h2 data-i18n="remote.title">Télécommande</h2>
+          <p id="bt-state" class="small"></p>
+          <p id="old-firmware" class="small warn-text" hidden data-i18n="remote.oldFirmware"></p>
+          <button id="r-pair" class="btn wide" data-i18n="remote.pair" data-i18n-title="remote.pairTitle">Connecter à la Switch</button>
+          <button id="r-pad" class="btn wide" data-i18n="remote.pad" data-i18n-title="remote.padTitle">Manette</button>
+          <div class="remote-grid">
+            <button id="r-ocarina" class="btn" data-i18n="remote.ocarina">Sortir l’ocarina</button>
+            <button id="r-play" class="btn primary" data-i18n="remote.play">▶ Jouer</button>
+            <button id="r-stop" class="btn" data-i18n="remote.stop">■ Stop</button>
+            <button id="r-a" class="btn">A</button>
+            <button id="r-b" class="btn">B</button>
+            <button id="r-lr" class="btn" data-i18n-title="remote.lrTitle">L + R</button>
+            <button id="r-home" class="btn" data-i18n="remote.home">⌂ Home</button>
+          </div>
+          <p class="small muted" data-i18n="remote.playHint"></p>
+          <button id="r-unpair" class="btn ghost wide" data-i18n="remote.unpair">Oublier la Switch (réappairer)</button>
+        </div>
+
+        <div id="pad-view" class="pad-view" hidden>
+          <span class="small muted" data-i18n="padview.label">Ce que la carte appuie :</span>
+          <div class="pad-keys">
+            <span data-btn="16">L</span><span data-btn="32">R</span><span data-btn="2">B</span><span data-btn="4">A</span
+            ><span data-btn="1">Y</span><span data-btn="8">X</span><span data-hat="0">✚↑</span><span data-hat="4">✚↓</span
+            ><span data-hat="6">✚←</span><span data-ly="0">◎↑</span><span data-ly="255">◎↓</span>
+          </div>
+        </div>
+
+        <details class="more">
+          <summary data-i18n="more.title">Autres options</summary>
+          <button id="download-uf2" class="btn ghost wide" data-i18n="more.uf2">Télécharger les morceaux (.uf2)</button>
+          <a id="download-fw" class="btn ghost wide fw-link" href="firmware/autoocarina_rp2040_zero.uf2" download data-i18n="more.fw"
+            >Télécharger le firmware (.uf2)</a
+          >
+          <button id="bootsel" class="btn ghost wide" data-i18n="more.bootsel">Mettre la carte en mode « clé USB »</button>
+          <button id="erase" class="btn ghost wide" data-i18n="more.erase">Effacer les morceaux de la carte</button>
+          <button id="export" class="btn ghost wide" data-i18n="more.export">Sauvegarder mes morceaux (.json)</button>
+          <label class="btn ghost wide file-btn"
+            ><span data-i18n="more.import">Charger une sauvegarde</span><input id="import" type="file" accept=".json"
+          /></label>
+        </details>
+      </aside>
+
+      <section class="editor">
+        <div class="card">
+          <div class="row title-row">
+            <input id="song-name" class="song-name" maxlength="23" data-i18n-aria="songName.aria" />
+            <span id="song-led" class="led-chip"></span>
+          </div>
+
+          <label id="drop" class="drop">
+            <input id="file" type="file" accept="audio/*,.mp3,.wav,.ogg,.m4a,.flac,.mid,.midi" />
+            <span data-i18n-html="drop.text"></span>
+            <span id="file-name" class="file-name"></span>
+          </label>
+
+          <div class="options">
+            <label class="check" id="separate-row">
+              <input id="separate" type="checkbox" checked />
+              <span data-i18n-html="separate.label"></span>
+            </label>
+            <label class="inline" id="stem-row"
+              ><span data-i18n="stem.label">Mélodie jouée par :</span>
+              <select id="stem">
+                <option value="auto" data-i18n="stem.auto">deviner</option>
+                <option value="vocals" data-i18n="stem.vocals">la voix</option>
+                <option value="other" data-i18n="stem.other">les instruments (sans voix, batterie ni basse)</option>
+              </select>
+            </label>
+            <label class="inline" id="midi-row" hidden><span data-i18n="midi.label">Piste MIDI :</span> <select id="midi-track"></select></label>
+          </div>
+
+          <details id="tab-box" class="tab-box">
+            <summary data-i18n="tab.summary">Ajouter une tablature (optionnel, pour des notes exactes)</summary>
+            <p class="muted small" data-i18n-html="tab.help"></p>
+            <textarea id="tab" rows="4" spellcheck="false" placeholder="Intro: L , R , A+Dpad↑ , Y , ..."></textarea>
+            <ul id="tab-errors" class="errors"></ul>
+          </details>
+
+          <div class="row">
+            <button id="analyze" class="btn primary" data-i18n="analyze">Analyser</button>
+            <div id="progress" class="progress" hidden>
+              <div class="progress-bar"><div id="progress-fill"></div></div>
+              <span id="progress-text" class="small"></span>
+            </div>
+          </div>
+          <p id="error" class="error" role="alert" hidden></p>
+          <div id="report" class="report" hidden></div>
+        </div>
+
+        <div class="card">
+          <div class="toolbar">
+            <div class="tool-group">
+              <button id="play" class="btn" data-i18n="player.play">▶ Écouter</button>
+              <button id="play-mix" class="btn" data-i18n="player.playMix">▶ Avec l’original</button>
+              <button id="stop" class="btn" data-i18n="player.stop">■ Stop</button>
+            </div>
+            <div class="tool-group">
+              <button id="tap" class="btn" data-i18n="player.tap">Tap rythme</button>
+              <button id="assist" class="btn" data-i18n="assist.button" disabled>Mode assisté</button>
+            </div>
+            <div class="tool-group">
+              <button id="transpose-down" class="btn" data-i18n="player.down" data-i18n-title="player.downTitle">−½ ton</button>
+              <button id="transpose-up" class="btn" data-i18n="player.up" data-i18n-title="player.upTitle">+½ ton</button>
+            </div>
+            <div class="tool-group">
+              <button id="zoom-out" class="btn icon" data-i18n-title="player.zoomOut">−</button>
+              <button id="zoom-in" class="btn icon" data-i18n-title="player.zoomIn">+</button>
+            </div>
+            <span class="toolbar-spacer"></span>
+            <button id="play-board" class="btn board-btn" disabled data-i18n="player.board">Jouer sur la carte</button>
+          </div>
+          <p id="passage-hint" class="small muted passage-hint" hidden data-i18n-html="passage.hint"></p>
+          <div id="passage-bar" class="assist-bar" hidden>
+            <span id="passage-text" class="small"></span>
+            <span class="assist-actions">
+              <button id="passage-next" class="btn primary" data-i18n="passage.next">Autre version de ce passage</button>
+              <button id="passage-play" class="btn" data-i18n="passage.play">▶ Écouter le passage</button>
+              <button id="passage-done" class="btn" data-i18n="passage.done">✓ C’est bon</button>
+            </span>
+          </div>
+          <div id="assist-bar" class="assist-bar" hidden>
+            <span class="small" data-i18n-html="assist.help"></span>
+            <span class="assist-actions">
+              <span id="assist-count" class="small muted"></span>
+              <button id="assist-undo" class="btn" data-i18n="assist.undo">Annuler</button>
+              <button id="assist-reset" class="btn" data-i18n="assist.reset">Tout effacer</button>
+            </span>
+          </div>
+          <div id="roll" class="roll"></div>
+          <p class="muted small help" data-i18n-html="roll.help"></p>
+          <ul id="warnings" class="warnings"></ul>
+        </div>
+
+        <details class="card settings">
+          <summary><h2 data-i18n="settings.title">Réglages</h2></summary>
+          <div class="grid">
+            <label
+              ><span data-i18n="set.layout">Disposition des boutons (options du jeu)</span>
+              <select id="set-layout">
+                <option value="normal" data-i18n="set.layout.normal">Normale : L R A Y X</option>
+                <option value="classic" data-i18n="set.layout.classic">Classique : R B A Y X</option>
+              </select>
+            </label>
+            <label
+              ><span data-i18n="set.lead">Préparation avant chaque note (ms)</span>
+              <input id="set-lead" type="number" min="20" max="200" step="5" />
+              <span class="muted small" data-i18n="set.leadHelp"></span>
+            </label>
+            <label
+              ><span data-i18n="set.min">Durée minimale d’une note (ms)</span>
+              <input id="set-min" type="number" min="40" max="400" step="5" />
+              <span class="muted small"
+                ><span data-i18n="set.minHelp"></span>
+                <button id="speed-test" class="link-btn" type="button" data-i18n="set.speedTest">test de rapidité</button>.</span
+              >
+            </label>
+            <label
+              ><span data-i18n="set.bpm">Tempo d’une tablature sans rythme (BPM)</span>
+              <input id="set-bpm" type="number" min="40" max="300" step="5" />
+            </label>
+            <label class="check"><input id="set-takeout" type="checkbox" /> <span data-i18n="set.takeout"></span></label>
+            <label class="check"><input id="set-avoid" type="checkbox" /> <span data-i18n="set.avoid"></span></label>
+            <label
+              ><span data-i18n="set.legato">Notes liées (le son ne se coupe pas entre deux notes)</span>
+              <select id="set-legato">
+                <option value="safe" data-i18n="set.legato.safe">Oui, sauf quand la croix ou le stick change (conseillé)</option>
+                <option value="always" data-i18n="set.legato.always">Toujours (plus fluide, à tester sur ta console)</option>
+                <option value="off" data-i18n="set.legato.off">Non : relâcher avant chaque note</option>
+              </select>
+              <span class="muted small" data-i18n="set.legatoHelp"></span>
+            </label>
+          </div>
+        </details>
+
+        <details class="card howto" open>
+          <summary><h2 data-i18n="howto.esp.title">Mode d’emploi — ESP32 (Bluetooth)</h2></summary>
+          <ol>
+            <li data-i18n-html="howto.esp.1"></li>
+            <li data-i18n-html="howto.esp.2"></li>
+            <li data-i18n-html="howto.esp.3"></li>
+            <li data-i18n-html="howto.esp.4"></li>
+            <li data-i18n-html="howto.esp.5"></li>
+          </ol>
+        </details>
+
+        <details class="card howto">
+          <summary><h2 data-i18n="howto.rp.title">Mode d’emploi — carte RP2040 / RP2350 (câble)</h2></summary>
+          <ol>
+            <li>
+              <span data-i18n-html="howto.rp.1"></span>
+              <span class="fw-pick">
+                <label class="inline"
+                  ><span data-i18n="fw.board">Ta carte :</span>
+                  <select id="fw-board">
+                    <option value="rp2040_zero">Waveshare RP2040-Zero</option>
+                    <option value="pico">Raspberry Pi Pico (+ autres RP2040)</option>
+                    <option value="pico_w">Raspberry Pi Pico W</option>
+                    <option value="pico2">Raspberry Pi Pico 2 (+ autres RP2350)</option>
+                    <option value="pico2_w">Raspberry Pi Pico 2 W</option>
+                    <option value="xiao_rp2040">Seeed XIAO RP2040</option>
+                    <option value="xiao_rp2350">Seeed XIAO RP2350</option>
+                    <option value="rp2350_zero">Waveshare RP2350-Zero</option>
+                  </select></label
+                >
+                <a class="btn fw-link" href="firmware/autoocarina_rp2040_zero.uf2" download data-i18n="fw.download">Télécharger le firmware</a>
+              </span>
+            </li>
+            <li data-i18n-html="howto.rp.2"></li>
+            <li data-i18n-html="howto.rp.3"></li>
+            <li data-i18n-html="howto.rp.4"></li>
+            <li class="muted" data-i18n-html="howto.rp.5"></li>
+          </ol>
+        </details>
+      </section>
+    </main>
+  </body>
+</html>
